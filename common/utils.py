@@ -50,9 +50,11 @@ def to_classes(y, dataset_name):
 
 def show_structure(model, file_name=None):
     model.summary()
-    file_name = file_name.split('.')[0]
-    file_name += '.png'
-    tf.keras.utils.plot_model(model, to_file=file_name, show_shapes=True, show_layer_names=True)
+    if file_name is not None:
+        file_name = file_name.split('.')[0]
+        file_name += '.png'
+
+    tf.keras.utils.plot_model(model, show_shapes=True, show_layer_names=True)
 
 def create_directory(path):
     try:
