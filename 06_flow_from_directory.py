@@ -18,7 +18,7 @@ data_flow = data_gen.flow_from_directory(
     target_size = (100, 100), # from (128, 128) to (100, 100) (NOTE: no channels)
     batch_size  = batch_size, # batch size specifying how many images to be read at once
     shuffle     = True, # random shuffling
-    class_mode  = 'categorical' # to get the on-hot encoded labels
+    class_mode  = 'categorical' # to get the one-hot encoded labels
     #class_mode  = 'binary' # to get the single digit labels
 )
 
