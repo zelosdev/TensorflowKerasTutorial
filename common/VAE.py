@@ -102,7 +102,7 @@ class VAE():
             return mu + K.exp(log_var / 2.0) * epsilon # re-parameterization trick
 
         # the latent space
-        # This layer samples a point z in the latent space from the normal distribution defined by mu and log_var.
+        # This layer notebooks a point z in the latent space from the normal distribution defined by mu and log_var.
         encoder_output_layer = Lambda(sampling, name='encoder_output')([self.mu, self.log_var])
 
         self.encoder = Model(encoder_input_layer, encoder_output_layer, name='Encoder')
