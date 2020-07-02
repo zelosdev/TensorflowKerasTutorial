@@ -45,8 +45,9 @@ batches = int(len(x_train) / batch_size)
 for epoch in range(epochs):
     for batch in range(batches):
         x_batch, y_batch = next_batch(x_train, y_train, batch_size)
-        loss = model.train_on_batch(x_batch, y_batch)
-        print('Epoch', epoch, ': Batch', batch, '-', model.metrics_names[0], '=', loss[0], '-', model.metrics_names[1], '=', loss[1])
+        ret = model.train_on_batch(x_batch, y_batch) # the return value: (loss, accuracy) pair
+        loss, accuracy = ret[0], ret[1]
+        print('Epoch', epoch, ': Batch', batch, '-', model.metrics_names[0], '=', loss, '-', model.metrics_names[1], '=', accuracy)
 
 ########################
 # evaluating the model #
