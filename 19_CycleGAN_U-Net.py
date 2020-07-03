@@ -297,7 +297,7 @@ class CycleGAN():
 
     def _export_result(self, data_loader, i_batch, run_folder, test_A_file, test_B_file):
 
-        for p in range(2):
+        for p in range(2): # to use the specified image and the random image alternately
 
             if p == 0: # using specified images
                 O_A = data_loader.load_img('data/apple_and_orange/testA/%s' % test_A_file)

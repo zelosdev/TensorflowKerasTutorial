@@ -4,7 +4,7 @@ from common.GAN import *
 
 x_train = load_quickdraw_camel()
 
-print(x_train.shape)
+print(x_train.shape) # (121399, 28, 28, 1)
 plt.imshow(x_train[200,:,:,0], cmap = 'gray')
 plt.show()
 
