@@ -1,12 +1,15 @@
-##########################################
-# to turn off warnings                   #
-import warnings                          #
-warnings.filterwarnings('ignore')        #
-                                         #
-import os                                #
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' #
-                                         #
-##########################################
+##########################################################
+# to turn off warnings                                   #
+import warnings                                          #
+warnings.filterwarnings('ignore')                        #
+                                                         #
+import os                                                #
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'                 #
+                                                         #
+import tensorflow.python.util.deprecation as deprecation #
+deprecation._PRINT_DEPRECATION_WARNINGS = False          #
+                                                         #
+##########################################################
 
 import numpy as np
 from glob import glob
@@ -28,7 +31,7 @@ class DataLoader():
     def __init__(self, img_size):
         self.img_size = img_size
 
-    def load_random_image(self, domain='A', how_many=1, is_testing=False):
+    def load_random_images(self, domain='A', how_many=1, is_testing=False):
         directory_name = 'train%s' % domain if not is_testing else 'test%s' % domain # trainA, trainB, testA, testB
         all_file_paths = glob('./data/apple_and_orange/%s/*' % directory_name) # all file paths
         selected_paths = np.random.choice(all_file_paths, size=how_many) # randomly select N images
@@ -160,8 +163,8 @@ class CycleGAN():
         V_B = self.d_B(F_B)
 
         # combined model to train the generates to fool discriminators
-        self.generator = Model(inputs=[O_A, O_B], outputs=[V_A, V_B, R_A, R_B, I_A, I_B])
-        self.generator.compile(loss=['mse', 'mse', 'mae', 'mae', 'mae', 'mae'], loss_weights=[1, 1, 10, 10, 2, 2], optimizer=Adam(self.learning_rate, 0.5))
+        self.combined_model = Model(inputs=[O_A, O_B], outputs=[V_A, V_B, R_A, R_B, I_A, I_B])
+        self.combined_model.compile(loss=['mse', 'mse', 'mae', 'mae', 'mae', 'mae'], loss_weights=[1, 1, 10, 10, 2, 2], optimizer=Adam(self.learning_rate, 0.5))
 
         self.d_A.trainable = True
         self.d_B.trainable = True
@@ -255,7 +258,7 @@ class CycleGAN():
             for batch, (imgs_A, imgs_B) in enumerate(data_loader.load_batch()): # batch_size = 1
 
                 d_loss, d_acc = self._train_discriminators(imgs_A, imgs_B, real, fake)
-                g_loss = self._train_generators(imgs_A, imgs_B, real)
+                g_loss = self._train_combined_model(imgs_A, imgs_B, real)
 
                 print ("[Epoch %d/%d] [Batch %d/%d] [D loss: %f, acc: %3d%%] [G loss: %05f, adv: %05f, recon: %05f, id: %05f] " \
                     % ( self.epoch, epochs,
@@ -291,9 +294,9 @@ class CycleGAN():
 
         return (d_loss_total, d_acc_total)
 
-    def _train_generators(self, imgs_A, imgs_B, real):
+    def _train_combined_model(self, imgs_A, imgs_B, real):
 
-        return self.generator.train_on_batch([imgs_A, imgs_B], [real, real, imgs_A, imgs_B, imgs_A, imgs_B])
+        return self.combined_model.train_on_batch([imgs_A, imgs_B], [real, real, imgs_A, imgs_B, imgs_A, imgs_B])
 
     def _export_result(self, data_loader, i_batch, run_folder, test_A_file, test_B_file):
 
@@ -303,8 +306,8 @@ class CycleGAN():
                 O_A = data_loader.load_img('data/apple_and_orange/testA/%s' % test_A_file)
                 O_B = data_loader.load_img('data/apple_and_orange/testB/%s' % test_B_file)
             else: # using randomly selected images
-                O_A = data_loader.load_random_image(domain='A', how_many=1, is_testing=True)
-                O_B = data_loader.load_random_image(domain='B', how_many=1, is_testing=True)
+                O_A = data_loader.load_random_images(domain='A', how_many=1, is_testing=True)
+                O_B = data_loader.load_random_images(domain='B', how_many=1, is_testing=True)
 
             F_A = self.g_BA.predict(O_B)
             F_B = self.g_AB.predict(O_A)
