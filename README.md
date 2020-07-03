@@ -1,4 +1,4 @@
 # TensorflowKerasTutorial
 Tensorflow Keras Tutorial for Dexter Studios R&amp;D
 
-material: http://wanochoi.com/lecture/AdvancedDeepLearningCourse.pdf
+Course Material: http://wanochoi.com/lecture/AdvancedDeepLearningCourse.pdf
