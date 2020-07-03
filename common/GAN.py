@@ -168,7 +168,7 @@ class GAN():
 
         loss_real = self.discriminator.train_on_batch(true_imgs, real)
         loss_fake = self.discriminator.train_on_batch(gen_imgs, fake)
-        loss_D = 0.5 * (loss_real + loss_fake)
+        loss_D = 0.5 * (loss_real + loss_fake) # [0]: loss, [1]: accuracy
 
         return [loss_D, loss_real, loss_fake]
 
@@ -181,7 +181,7 @@ class GAN():
 
         loss_G = self.combined_model.train_on_batch(noise, real)
 
-        return loss_G
+        return loss_G # [0]: loss, [1]: accuracy
 
     def train(self, x_train, batch_size, epochs):
 

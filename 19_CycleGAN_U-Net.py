@@ -247,15 +247,15 @@ class CycleGAN():
 
     def train(self, data_loader, run_folder, epochs, test_A_file, test_B_file, batch_size=1, sample_interval=50):
 
-        # adversarial loss ground truths
-        valid = np.ones((batch_size,) + self.disc_patch) # (1, 16, 16, 1) = (1,,) + (16, 16, 1)
+        # adversarial loss ground truths (the answer for the decision)
+        real = np.ones((batch_size,) + self.disc_patch) # (1, 16, 16, 1) = (1,,) + (16, 16, 1)
         fake = np.zeros((batch_size,) + self.disc_patch) # (1, 16, 16, 1) = (1,,) + (16, 16, 1)
 
         for epoch in range(self.epoch, epochs):
             for batch, (imgs_A, imgs_B) in enumerate(data_loader.load_batch()): # batch_size = 1
 
-                d_loss, d_acc = self._train_discriminators(imgs_A, imgs_B, valid, fake)
-                g_loss = self._train_generators(imgs_A, imgs_B, valid)
+                d_loss, d_acc = self._train_discriminators(imgs_A, imgs_B, real, fake)
+                g_loss = self._train_generators(imgs_A, imgs_B, real)
 
                 print ("[Epoch %d/%d] [Batch %d/%d] [D loss: %f, acc: %3d%%] [G loss: %05f, adv: %05f, recon: %05f, id: %05f] " \
                     % ( self.epoch, epochs,
@@ -271,17 +271,17 @@ class CycleGAN():
 
             self.epoch += 1
 
-    def _train_discriminators(self, O_A, O_B, valid, fake):
+    def _train_discriminators(self, O_A, O_B, real, fake):
 
         F_A = self.g_BA.predict(O_B)
         F_B = self.g_AB.predict(O_A)
 
-        dA_ret_real = self.d_A.train_on_batch(O_A, valid)
+        dA_ret_real = self.d_A.train_on_batch(O_A, real)
         dA_ret_fake = self.d_A.train_on_batch(F_A, fake)
         dA_ret = 0.5 * np.add(dA_ret_real, dA_ret_fake)
         dA_loss, dA_acc = dA_ret[0], dA_ret[1]
 
-        dB_ret_real = self.d_B.train_on_batch(O_B, valid)
+        dB_ret_real = self.d_B.train_on_batch(O_B, real)
         dB_ret_fake = self.d_B.train_on_batch(F_B, fake)
         dB_ret = 0.5 * np.add(dB_ret_real, dB_ret_fake)
         dB_loss, dB_acc = dB_ret[0], dB_ret[1]
@@ -291,9 +291,9 @@ class CycleGAN():
 
         return (d_loss_total, d_acc_total)
 
-    def _train_generators(self, imgs_A, imgs_B, valid):
+    def _train_generators(self, imgs_A, imgs_B, real):
 
-        return self.generator.train_on_batch([imgs_A, imgs_B], [valid, valid, imgs_A, imgs_B, imgs_A, imgs_B])
+        return self.generator.train_on_batch([imgs_A, imgs_B], [real, real, imgs_A, imgs_B, imgs_A, imgs_B])
 
     def _export_result(self, data_loader, i_batch, run_folder, test_A_file, test_B_file):
 
