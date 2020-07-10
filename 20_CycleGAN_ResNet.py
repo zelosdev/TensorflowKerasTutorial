@@ -25,7 +25,8 @@ from tensorflow.keras.models import Model
 from tensorflow_addons.layers import InstanceNormalization
 from tensorflow.keras.initializers import RandomNormal
 from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.layers import UpSampling2D, Conv2D, Conv2DTranspose
+from tensorflow.keras.layers import UpSampling2D, Conv2D, Conv2DTranspose, add
+from models.layers.layers import ReflectionPadding2D
 
 class DataLoader():
     def __init__(self, img_size):
@@ -171,54 +172,61 @@ class CycleGAN():
 
     def _build_generator(self):
 
+        def conv7s1(input, filters, final):
+            x = ReflectionPadding2D(padding=(3,3))(input)
+            x = Conv2D(filters=filters, kernel_size=7, strides=1, padding='valid')(x)
+            if final:
+                x = Activation('tanh')(x)
+            else:
+                x = InstanceNormalization(axis=-1, center=False, scale=False)(x)
+                x = Activation('relu')(x)
+            return x
+
+        def downsample(input, filters):
+            x = Conv2D(filters=filters, kernel_size=3, strides=2, padding='same')(input)
+            x = InstanceNormalization(axis=-1, center=False, scale=False)(x)
+            x = Activation('relu')(x)
+            return x
+
+        def residual(input, filters):
+            shortcut = input
+
+            x = ReflectionPadding2D(padding=(1,1))(input)
+            x = Conv2D(filters=filters, kernel_size=3, strides=1, padding='valid')(x)
+            x = InstanceNormalization(axis=-1, center=False, scale=False)(x)
+            x = Activation('relu')(x)
+            
+            x = ReflectionPadding2D(padding=(1,1))(x)
+            x = Conv2D(filters, kernel_size=3, strides=1, padding='valid')(x)
+            x = InstanceNormalization(axis=-1, center=False, scale=False)(x)
+
+            return add([shortcut, x])
+
+        def upsample(input, filters):
+            x = Conv2DTranspose(filters=filters, kernel_size=3, strides=2, padding='same')(input)
+            x = InstanceNormalization(axis=-1, center=False, scale=False)(x)
+            x = Activation('relu')(x)
+            return x
+
         input_layer = Input(shape=self.img_shape)
         x = input_layer
 
-        # Downsampling
-
-        x = Conv2D(filters=32, kernel_size=4, strides=2, padding='same')(x)
-        x = InstanceNormalization(axis=-1, center=False, scale=False)(x)
-        x = Activation('relu')(x)
-        d1 = x
-
-        x = Conv2D(filters=64, kernel_size=4, strides=2, padding='same')(x)
-        x = InstanceNormalization(axis=-1, center=False, scale=False)(x)
-        x = Activation('relu')(x)
-        d2 = x
-
-        x = Conv2D(filters=128, kernel_size=4, strides=2, padding='same')(x)
-        x = InstanceNormalization(axis=-1, center=False, scale=False)(x)
-        x = Activation('relu')(x)
-        d3 = x
-
-        x = Conv2D(filters=256, kernel_size=4, strides=2, padding='same')(x)
-        x = InstanceNormalization(axis=-1, center=False, scale=False)(x)
-        x = Activation('relu')(x)
-        d4 = x
-
-        # Upsampling
-
-        x = UpSampling2D(size=2)(d4)
-        x = Conv2D(filters=128, kernel_size=4, strides=1, padding='same')(x)
-        x = InstanceNormalization(axis=-1, center=False, scale=False)(x)
-        x = Activation('relu')(x)
-        u1 = Concatenate()([x, d3])
-
-        x = UpSampling2D(size=2)(u1)
-        x = Conv2D(filters=64, kernel_size=4, strides=1, padding='same')(x)
-        x = InstanceNormalization(axis=-1, center=False, scale=False)(x)
-        x = Activation('relu')(x)
-        u2 = Concatenate()([x, d2])
-
-        x = UpSampling2D(size=2)(u2)
-        x = Conv2D(filters=32, kernel_size=4, strides=1, padding='same')(x)
-        x = InstanceNormalization(axis=-1, center=False, scale=False)(x)
-        x = Activation('relu')(x)
-        u3 = Concatenate()([x, d1])
-
-        # upsampling to return the tensor to the same size as the original image
-        x = UpSampling2D(size=2)(u3)
-        output_layer = Conv2D(self.img_channels, kernel_size=4, strides=1, padding='same', activation='tanh')(x)
+        x = conv7s1(x, 32, False)
+        x = downsample(x, 64)
+        x = downsample(x, 128)
+        x = residual(x, 128)
+        x = residual(x, 128)
+        x = residual(x, 128)
+        x = residual(x, 128)
+        x = residual(x, 128)
+        x = residual(x, 128)
+        x = residual(x, 128)
+        x = residual(x, 128)
+        x = residual(x, 128)
+        x = upsample(x, 64)
+        x = upsample(x, 32)
+        x = conv7s1(x, 3, True)
+        output_layer = x
 
         return Model(input_layer, output_layer)
 
@@ -353,7 +361,7 @@ TEST_A_FILE = 'n07740461_14740.jpg'
 TEST_B_FILE = 'n07749192_4241.jpg'
 
 gan.train(data_loader
-        , run_folder='C:/work/KerasTest/result/U-Net'
+        , run_folder='C:/work/KerasTest/result/ResNet'
         , epochs=EPOCHS
         , test_A_file=TEST_A_FILE
         , test_B_file=TEST_B_FILE
