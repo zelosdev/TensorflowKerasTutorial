@@ -16,11 +16,17 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.applications import vgg19
 
+# example 1
 base_image_path = 'data/style_transfer/tuebingen.jpg' # 1024 x 768
 style_reference_image_path = 'data/style_transfer/starry_night.jpg' # 512 x 344
 
+# example 2
 #base_image_path = 'data/style_transfer/bullfight.jpg' # 700 x 277
 #style_reference_image_path = 'data/style_transfer/leejungseob_white_ox.jpg' # 810 x 6154
+
+# example 3
+#base_image_path = 'data/style_transfer/disney.jpg' # 800 x 450
+#style_reference_image_path = 'data/style_transfer/kandinsky5.jpg' # 1000 x 657
 
 total_variation_weight = 1e-6
 style_weight = 1e-6
