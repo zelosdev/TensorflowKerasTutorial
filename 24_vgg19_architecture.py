@@ -10,7 +10,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' #
 
 from tensorflow.keras.applications import vgg19
 
-model = vgg19.VGG19(weights="imagenet", include_top=False)
+model = vgg19.VGG19(weights='imagenet', include_top=False) # the instance of the VGG19 model
 model.summary()
 
 layer_outputs = dict([(layer.name, layer.output) for layer in model.layers])
